@@ -101,8 +101,12 @@ EXPOSED_JS_FUNCTIONS = pp.ZeroOrMore(
 )
 
 
-def init(path, allowed_extensions=['.js', '.html', '.txt', '.htm',
-                                   '.xhtml', '.vue'], js_result_timeout=10000):
+def init(
+    path,
+    allowed_extensions=['.js', '.html', '.txt', '.htm','.xhtml', '.vue'],
+    exclude_patterns=[],
+    js_result_timeout=10000
+):
     global root_path, _js_functions, _js_result_timeout
     root_path = _get_real_path(path)
 
@@ -112,8 +116,12 @@ def init(path, allowed_extensions=['.js', '.html', '.txt', '.htm',
             if not any(name.endswith(ext) for ext in allowed_extensions):
                 continue
 
+            file_path = os.path.join(root, name)
+            if any(rgx.match(pattern, file_path) for pattern in exclude_patterns):
+                continue
+
             try:
-                with open(os.path.join(root, name), encoding='utf-8') as file:
+                with open(file_path, encoding='utf-8') as file:
                     contents = file.read()
                     expose_calls = set()
                     matches = EXPOSED_JS_FUNCTIONS.parseString(contents).asList()
